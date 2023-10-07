@@ -1,30 +1,38 @@
 #include <stdio.h>
 #include <ncurses.h>
+#include <stdlib.h>
 #define body '0'
 #define head '8'
+#define head2 '8'
+#define tail '~'
+#define tail2 '?'
 #define apple '+'
 #define empty ' '
 int direction = 3;
-//<1 ^2 >3 V4
+int tail_direction = 3;
 void update();
 void display();
 void init_board();
-char board[700];
+int tail_directions[700];
+int board[700];
+int langth;
 int main(){
     initscr();
     keypad(stdscr, TRUE);
     wtimeout(stdscr, 1000);
     noecho();
     init_board();
+    display();
     while (1){
         update();
+        //getch();
         clear();
         display();
     }
     endwin();
 }
 void update(){
-    char ch = getch();
+    int ch = getch();
     switch(ch){
         case KEY_LEFT:
             direction = 1;
@@ -39,8 +47,83 @@ void update(){
             direction = 4;
             break;
     }
-    
+     int apple_ate = 0;
+
+    for(int i=0; i<700; i+=1){    
+        if(board[i] == head ){
+            if(direction == 1){
+                if(board[i-1] == apple){
+                    langth += 1;
+                    apple_ate = 1;
+                }
+                board[i] = body;
+                board[i-1] = head;
+            }else if(direction == 2){ 
+                if(board[i-50] == apple){
+                    langth += 1;
+                    apple_ate = 1;
+                }
+                board[i] = body;
+                board[i-50] = head2;
+            }else if(direction == 3){
+                if(board[i+1] == apple){
+                    langth += 1;
+                    apple_ate = 1;
+                }
+                board[i] = body;
+                board[i+1] = head;
+            }else if(direction == 4){ 
+                if(board[i+50] == apple){
+                    langth += 1;
+                    apple_ate = 1;
+                }
+                board[i] = body;
+                board[i+50] = head2;
+            }
+            break;   
+        }
+    }
+
+    for(int i=700; i>0; i-=1){
+        tail_directions[i] = tail_directions[i-1];
+        // 3 2 1 0
+        // 2 3 4 1
+    }
+    tail_directions[0] = direction;
+    tail_direction = tail_directions[langth];
+    //printw("%i\n", tail_direction);
+        //printw("\n%i", direction);
+    if (apple_ate){
+        int randome = rand() % 700 + 0;
+        while(board[randome] != empty){
+            randome = rand() % 700 + 0;
+        }
+        board[randome] = apple;
+        return;
+    }
+        
+    for(int i=0; i<700; i+=1){
+        if(board[i] == tail||board[i] == tail2){
+            if(tail_direction == 1){ 
+                board[i] = empty;
+                board[i-1] = tail;
+            }else if(tail_direction == 2){ 
+                board[i] = empty;
+                board[i-50] = tail2;
+            }else if(tail_direction == 3){ 
+                board[i] = empty;
+                board[i+1] = tail;
+            }else if(tail_direction == 4){ 
+                board[i] = empty;
+                board[i+50] = tail2;
+            }  
+            break;  
+        }
+    }    
 }
+
+// direction 1 = left, derection 2 = up, derection 3 = right, derection 4 = down.
+
 void display(){
     int index=0;
     printw(" --------------------------------------------------\n");
@@ -60,15 +143,20 @@ void init_board(){
     }
     board[10]=head;
     board[9]=body;
-    board[8]=body;
-    board[7]=body;
-    board[6]=body;
-    board[5]=body;
-
+    board[8]=tail;
+   // board[7]=body;
+   // board[6]=body;
+   // board[5]=body;
+   board[375]=apple;
+    langth = 2;
+    tail_directions[0] = 3;
+    tail_directions[1] = 3;
 }
+
 //  ∞
 //  0
 //  0
 //  0
 //  0
-//  00000008 +
+//  ?
+//  ~08 +
